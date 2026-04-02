@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BLVD AI Receptionist — Case Study</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    /* ─── Tokens ─────────────────────────────────────────────── */
+    :root {
+      --bg:            #0A0A0A;
+      --text-primary:  #FFFFFF;
+      --text-secondary:#A0A0A0;
+      --text-tertiary: #606060;
+      --accent:        #CEAA75;
+      --border:        rgba(255, 255, 255, 0.08);
+
+      --title-xl: clamp(48px, 6vw, 96px);
+      --title-lg: clamp(32px, 4vw, 56px);
+      --title-md: clamp(22px, 3vw, 32px);
+      --body-lg:  18px;
+      --body-md:  16px;
+      --body-sm:  14px;
+      --body-xs:  12px;
+
+      --max-w: 1080px;
+      --gutter: clamp(24px, 5vw, 80px);
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ─── Base ───────────────────────────────────────────────── */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    .wrap {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 var(--gutter);
+    }
+
+    /* ─── Scroll animation ───────────────────────────────────── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .block {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+    }
+
+    .block.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── Label ──────────────────────────────────────────────── */
+    .label {
+      font-size: var(--body-xs);
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       1. HERO
+    ═══════════════════════════════════════════════════════════ */
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px var(--gutter);
+      overflow: hidden;
+    }
+
+    /* Subtle radial glow at top */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(206, 170, 117, 0.12) 0%, transparent 70%),
+        linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    /* Subtle grid texture */
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 80%);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--body-xs);
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 32px;
+    }
+
+    .hero-eyebrow::before,
+    .hero-eyebrow::after {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--text-tertiary);
+    }
+
+    .hero-title {
+      font-size: var(--title-xl);
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      line-height: 1.0;
+      color: var(--text-primary);
+      margin-bottom: 28px;
+    }
+
+    /* Gradient text on the product name */
+    .hero-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, #fff 30%, rgba(206,170,117,0.8) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-tagline {
+      font-size: var(--body-lg);
+      font-weight: 300;
+      color: var(--text-secondary);
+      letter-spacing: -0.01em;
+      line-height: 1.6;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       2. META STRIP
+    ═══════════════════════════════════════════════════════════ */
+    .meta-strip {
+      border-top: 1px solid var(--border);
+      padding: 48px 0;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .meta-item {
+      background: var(--bg);
+      padding: 32px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .meta-item:first-child { padding-left: 0; }
+    .meta-item:last-child  { padding-right: 0; }
+
+    .meta-value {
+      font-size: var(--body-md);
+      font-weight: 500;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       3. OVERVIEW
+    ═══════════════════════════════════════════════════════════ */
+    .overview {
+      padding: 96px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 80px;
+      align-items: start;
+    }
+
+    .overview-left .section-heading {
+      font-size: var(--title-md);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      color: var(--text-primary);
+      margin-top: 16px;
+    }
+
+    .overview-right p {
+      font-size: var(--body-lg);
+      font-weight: 300;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      letter-spacing: -0.01em;
+    }
+
+    .overview-right p + p {
+      margin-top: 24px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       4. FULL-WIDTH MEDIA
+    ═══════════════════════════════════════════════════════════ */
+    .media-block {
+      padding: 0 0 96px;
+    }
+
+    .media-placeholder {
+      aspect-ratio: 16 / 9;
+      border: 1px dashed rgba(255,255,255,0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.02);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .media-placeholder.tall {
+      aspect-ratio: 16 / 7;
+    }
+
+    .media-placeholder-label {
+      font-size: var(--body-sm);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      color: var(--text-tertiary);
+    }
+
+    /* Corner accents */
+    .media-placeholder::before,
+    .media-placeholder::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-color: rgba(206,170,117,0.4);
+      border-style: solid;
+    }
+
+    .media-placeholder::before {
+      top: -1px; left: -1px;
+      border-width: 2px 0 0 2px;
+    }
+
+    .media-placeholder::after {
+      bottom: -1px; right: -1px;
+      border-width: 0 2px 2px 0;
+    }
+
+    /* ─── Video grid ─────────────────────────────────────────── */
+    .video-grid {
+      padding: 48px 0 96px;
+    }
+
+    .video-grid-inner {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    /* ─── Landscape 2x2 grid ─────────────────────────────────── */
+    .video-grid-2x2 {
+      padding: 48px 0 96px;
+    }
+
+    .video-grid-2x2-inner {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .video-grid-2x2-item video {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      background: rgba(255,255,255,0.02);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+    }
+
+    @media (max-width: 640px) {
+      .video-grid-2x2-inner { grid-template-columns: 1fr; }
+    }
+
+    .video-grid-item video {
+      width: 100%;
+      border-radius: 8px;
+      display: block;
+      background: rgba(255,255,255,0.02);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+    }
+
+    .video-grid-item .video-caption {
+      margin-top: 16px;
+    }
+
+    .video-grid-item .video-caption-title {
+      font-size: var(--body-md);
+      font-weight: 500;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+
+    .video-grid-item .video-caption-body {
+      font-size: var(--body-sm);
+      font-weight: 300;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    @media (max-width: 768px) {
+      .video-grid-inner { grid-template-columns: 1fr; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       5. SECTION DIVIDER
+    ═══════════════════════════════════════════════════════════ */
+    .section-divider {
+      padding: 16px 0 64px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .section-divider .label {
+      color: var(--text-tertiary);
+      white-space: nowrap;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       6. TWO-COLUMN CONTENT
+    ═══════════════════════════════════════════════════════════ */
+    .two-col {
+      padding: 0 0 96px;
+    }
+
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 55fr 45fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .two-col-text .col-heading {
+      font-size: var(--title-md);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      color: var(--text-primary);
+      margin: 16px 0 24px;
+    }
+
+    .two-col-text p {
+      font-size: var(--body-md);
+      color: var(--text-secondary);
+      line-height: 1.75;
+      font-weight: 300;
+    }
+
+    .two-col-text p + p {
+      margin-top: 16px;
+    }
+
+    .col-media .media-placeholder {
+      aspect-ratio: 4 / 3;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       8. QUOTE / CALLOUT
+    ═══════════════════════════════════════════════════════════ */
+    .callout {
+      padding: 96px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 96px;
+    }
+
+    .callout-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      position: relative;
+      padding-left: 40px;
+    }
+
+    .callout-inner::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent) 0%, transparent 100%);
+    }
+
+    .callout-mark {
+      font-size: 64px;
+      line-height: 1;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: block;
+      opacity: 0.6;
+    }
+
+    .callout-quote {
+      font-size: clamp(20px, 2.5vw, 28px);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text-primary);
+      line-height: 1.5;
+      letter-spacing: -0.02em;
+    }
+
+    .callout-source {
+      margin-top: 24px;
+      font-size: var(--body-sm);
+      color: var(--text-tertiary);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       9. THREE-COLUMN GRID
+    ═══════════════════════════════════════════════════════════ */
+    .three-col {
+      padding: 0 0 128px;
+    }
+
+    .three-col-header {
+      margin-bottom: 48px;
+    }
+
+    .three-col-header h2 {
+      font-size: var(--title-lg);
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-top: 16px;
+    }
+
+    .three-col-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--border);
+    }
+
+    .col-card {
+      padding: 40px 40px 40px 0;
+      border-right: 1px solid var(--border);
+    }
+
+    .col-card:first-child {
+      padding-left: 0;
+    }
+
+    .col-card:last-child {
+      border-right: none;
+      padding-right: 0;
+      padding-left: 40px;
+    }
+
+    .col-card:nth-child(2) {
+      padding-left: 40px;
+    }
+
+    .col-card-label {
+      font-size: var(--body-xs);
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .col-card h3 {
+      font-size: clamp(18px, 1.8vw, 22px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .col-card p {
+      font-size: var(--body-sm);
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       10. FOOTER STRIP
+    ═══════════════════════════════════════════════════════════ */
+    .footer-strip {
+      border-top: 1px solid var(--border);
+      padding: 64px var(--gutter);
+      text-align: center;
+    }
+
+    .footer-strip p {
+      font-size: var(--body-sm);
+      color: var(--text-tertiary);
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── Hero video ─────────────────────────────────────────── */
+    .hero-video {
+      width: 100%;
+      max-width: 70%;
+      border-radius: 8px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .hero-video { max-width: 100%; }
+
+      :root { --gutter: 24px; }
+
+      .hero { min-height: 90svh; padding: 80px var(--gutter); }
+      .hero-title { letter-spacing: -0.03em; }
+
+      .meta-grid { grid-template-columns: 1fr; gap: 0; }
+      .meta-item { padding: 24px 0; border-top: 1px solid var(--border); }
+      .meta-item:first-child { border-top: none; }
+
+      .overview-grid { grid-template-columns: 1fr; gap: 40px; }
+
+      .two-col-grid { grid-template-columns: 1fr; gap: 40px; }
+      .col-media { order: -1; }
+
+      .three-col-grid { grid-template-columns: 1fr; }
+      .col-card { border-right: none; border-top: 1px solid var(--border); padding: 32px 0; }
+      .col-card:first-child { border-top: none; }
+
+      .callout-inner { padding-left: 24px; }
+    }
+
+    @media (max-width: 640px) {
+      .overview { padding: 64px 0; }
+      .media-block { padding: 0 0 64px; }
+      .two-col { padding: 0 0 64px; }
+      .callout { padding: 64px 0; margin-bottom: 64px; }
+      .three-col { padding: 0 0 80px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+       1. HERO
+  ══════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-eyebrow">Case Study</div>
+      <h1 class="hero-title">BLVD <em>AI Receptionist</em></h1>
+      <p class="hero-tagline">Placeholder tagline — one line describing the project outcome or core value.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       2. META STRIP
+  ══════════════════════════════════════ -->
+  <div class="meta-strip block">
+    <div class="wrap">
+      <div class="meta-grid">
+        <div class="meta-item">
+          <span class="label">Client</span>
+          <span class="meta-value">BLVD</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Year</span>
+          <span class="meta-value">2024</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Role</span>
+          <span class="meta-value">Product Design · AI Integration</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       3. OVERVIEW
+  ══════════════════════════════════════ -->
+  <section class="overview block">
+    <div class="wrap">
+      <div class="overview-grid">
+        <div class="overview-left">
+          <span class="label">Overview</span>
+          <h2 class="section-heading">Placeholder section heading for the project overview</h2>
+        </div>
+        <div class="overview-right">
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vehicula felis sit amet lorem fermentum, non facilisis nisi porttitor. Nulla facilisi. Proin blandit ligula eu nisl volutpat, vel efficitur nisl tincidunt.</p>
+          <p>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       4. FULL-WIDTH MEDIA (Hero)
+  ══════════════════════════════════════ -->
+  <div class="media-block block">
+    <div class="wrap">
+      <video
+        src="media/video/inapp2-small.webm"
+        poster="media/video/inapp-thumb.png"
+        autoplay
+        loop
+        muted
+        playsinline
+        style="width:100%;border-radius:8px;display:block;"
+      ></video>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       4b. VIDEO GRID
+  ══════════════════════════════════════ -->
+  <section class="video-grid block">
+    <div class="wrap">
+      <div class="video-grid-inner">
+        <div class="video-grid-item">
+          <video src="media/video/agent-actions.webm" loop muted playsinline></video>
+          <div class="video-caption">
+            <p class="video-caption-title">Placeholder title</p>
+            <p class="video-caption-body">Placeholder description explaining what this feature or moment shows.</p>
+          </div>
+        </div>
+        <div class="video-grid-item">
+          <video src="media/video/avatars.mp4" loop muted playsinline></video>
+          <div class="video-caption">
+            <p class="video-caption-title">Placeholder title</p>
+            <p class="video-caption-body">Placeholder description explaining what this feature or moment shows.</p>
+          </div>
+        </div>
+        <div class="video-grid-item">
+          <video src="media/video/filter.webm" loop muted playsinline></video>
+          <div class="video-caption">
+            <p class="video-caption-title">Placeholder title</p>
+            <p class="video-caption-body">Placeholder description explaining what this feature or moment shows.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       4c. HERO MEDIA (Calls)
+  ══════════════════════════════════════ -->
+  <div class="media-block block">
+    <div class="wrap">
+      <video
+        src="media/video/calls.webm"
+        poster="media/video/calls-thumb.png"
+        autoplay
+        loop
+        muted
+        playsinline
+        style="width:100%;border-radius:8px;display:block;"
+      ></video>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       4d. LANDSCAPE 2x2 VIDEO GRID
+  ══════════════════════════════════════ -->
+  <section class="video-grid-2x2 block">
+    <div class="wrap">
+      <div class="video-grid-2x2-inner">
+        <div class="video-grid-2x2-item">
+          <video src="media/video/calls-conv1.webm" autoplay loop muted playsinline></video>
+        </div>
+        <div class="video-grid-2x2-item">
+          <video src="media/video/calls-conv2.webm" autoplay loop muted playsinline></video>
+        </div>
+        <div class="video-grid-2x2-item">
+          <video src="media/video/calls-conv3.webm" autoplay loop muted playsinline></video>
+        </div>
+        <div class="video-grid-2x2-item">
+          <video src="media/video/calls-conv4.webm" autoplay loop muted playsinline></video>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       5. SECTION DIVIDER
+  ══════════════════════════════════════ -->
+  <div class="wrap block">
+    <div class="section-divider">
+      <span class="label">— Process</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       6. TWO-COLUMN CONTENT
+  ══════════════════════════════════════ -->
+  <section class="two-col block">
+    <div class="wrap">
+      <div class="two-col-grid">
+        <div class="two-col-text">
+          <span class="label">Challenge</span>
+          <h2 class="col-heading">Placeholder heading for this content section</h2>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vehicula felis sit amet lorem fermentum, non facilisis nisi porttitor. Nulla facilisi.</p>
+          <p>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+        </div>
+        <div class="col-media">
+          <div class="media-placeholder">
+            <span class="media-placeholder-label">[ Media ]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       7. FULL-WIDTH MEDIA (Second / Taller)
+  ══════════════════════════════════════ -->
+  <div class="media-block block">
+    <div class="wrap">
+      <div class="media-placeholder tall">
+        <span class="media-placeholder-label">[ Full-width media — screenshots / animation ]</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       8. QUOTE / CALLOUT
+  ══════════════════════════════════════ -->
+  <section class="callout block">
+    <div class="wrap">
+      <div class="callout-inner">
+        <span class="callout-mark">"</span>
+        <p class="callout-quote">Placeholder pull quote or key insight from the project — something memorable that captures the core outcome or a stakeholder perspective.</p>
+        <p class="callout-source">— Name, Title · BLVD</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       9. THREE-COLUMN GRID
+  ══════════════════════════════════════ -->
+  <section class="three-col block">
+    <div class="wrap">
+      <div class="three-col-header">
+        <span class="label">Outcomes</span>
+        <h2>Placeholder outcomes heading</h2>
+      </div>
+      <div class="three-col-grid">
+        <div class="col-card">
+          <span class="col-card-label">01</span>
+          <h3>Placeholder outcome or feature title</h3>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vehicula felis sit amet lorem fermentum.</p>
+        </div>
+        <div class="col-card">
+          <span class="col-card-label">02</span>
+          <h3>Placeholder outcome or feature title</h3>
+          <p>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.</p>
+        </div>
+        <div class="col-card">
+          <span class="col-card-label">03</span>
+          <h3>Placeholder outcome or feature title</h3>
+          <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════
+       10. FOOTER STRIP
+  ══════════════════════════════════════ -->
+  <footer class="footer-strip">
+    <p>BLVD AI Receptionist &middot; 2024</p>
+  </footer>
+
+  <script>
+    const blocks = document.querySelectorAll('.block');
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    blocks.forEach((block) => observer.observe(block));
+
+    // Play grid videos on hover (desktop) or always (touch/mobile)
+    const isTouchDevice = window.matchMedia('(hover: none)').matches;
+    document.querySelectorAll('.video-grid-item video').forEach((video) => {
+      if (isTouchDevice) {
+        video.play();
+      } else {
+        video.addEventListener('mouseenter', () => video.play());
+        video.addEventListener('mouseleave', () => { video.loop = false; });
+        video.addEventListener('ended', () => { video.loop = true; video.currentTime = 0; });
+      }
+    });
+  </script>
+</body>
+</html>
